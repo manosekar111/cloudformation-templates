@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Including instance in parametertype
+
+Parameters:
+  MyKeyName:
+    Description: 'select new key name'
+    Type: 'AWS::EC2::KeyPair::KeyName'
+  MyAvailabiltyZone:
+    Description: 'select AZ'
+    Type: 'String'
+    Default: ap-south-1a 
+    AllowedValues:
+      - ap-south-1a
+      - ap-south-1b
+  MyInstanceType: 
+    Description: 'select the instance type'
+    Type: 'String'
+    Default: t2.micro
+    AllowedValues:
+      - 't2.micro'
+      - 't2.medium'
+      - 't3.small'
+Resources:
+  ProdEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties: 
+      ImageId: 'ami-02913db388613c3e1'
+      InstanceType: !Ref MyInstanceType
+      SecurityGroups: 
+        - default
+        - !Ref SSHSecurityGroup
+      AvailabilityZone: !Ref MyAvailabiltyZone
+
+  SSHSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties: 
+      GroupDescription: SSH new Group
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: 'tcp'
+          FromPort: '8080'
+          ToPort: '8080'  
+          CidrIp: 0.0.0.0/0

@@ -1,0 +1,95 @@
+#key value pairs
+Name: mano
+Age: 23
+GPA: 6.5
+Ocupational: Cloud Engineer 
+State: "Bangalore"
+DOB: 1996-05-25T15:53:00
+Male: true
+About me: " I am passionate about my career"
+Policecases: Null
+
+#yaml lists#
+persons:
+  - karthick:
+  - lucy:
+  - manopoly:
+persons: [karthick,lucy,manopoly]  
+
+#yaml Dictionaries
+David:
+  Age: 27
+  ocuppation: Engineer
+  State: uttar pradesh
+  GPA: 7.5
+  male: True
+
+
+#yaml list containing dictionaries
+persons: 
+  - Dave:
+      Age: 22
+      place: coimbatore
+      occupation: IT
+  - Muthu:
+      Age: 23
+      place: udipi
+      occupation: cloud
+  - sekar:
+      Age: 18
+      place: bangalore
+      ocupational: cloud
+      
+#yaml list containing dictionaries containing lists
+Persons:
+  - Maki:
+      Age: 30
+      occupation: Developer
+      place: kerela
+      Degree:
+        - B.E
+        - P.H.D
+        - M.E
+  - Kopi:
+      Age: 25
+      occupation: linux admin
+      place: himachal
+      Degree: [Bachelor,ME,phd]
+  - Lavu:
+      Age: 30
+      occupation: windows admin
+      place: karantaka
+      Degree:
+        - BBA
+        - MBA
+#yaml pipe#
+persons:
+  - Nakul:
+      Age: 34
+      occupation: project manager
+      place: koramangala
+      state: karanataka
+      male: true
+      GPA: 6.7
+      Address: |
+        1/136 ashakana street
+        sivan chetty garden
+        bangalore-560032
+#yaml greater than sign#
+persons:
+  - Moni:
+      Age: 23
+      occupation: Linux admin
+      state: Tamilnadu
+      GPA: 8.0
+      Female: true
+      About Me: >
+        My name is Moni, and I enjoy meeting new people and finding ways to help them have an uplifting experience. 
+        I have had a variety of customer service opportunities, through which I was able to have fewer returned products and increased repeat customers,
+        when compared with co-workers. I am dedicated, outgoing, and a team player. 
+        Who could I speak with in your customer service department about your organization’s customer service needs.
+
+
+
+
+

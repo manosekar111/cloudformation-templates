@@ -1,0 +1,7 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  DevEC2Instances:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: "ami-0a74bfeb190bd404f"
+      InstanceType: t2.micro

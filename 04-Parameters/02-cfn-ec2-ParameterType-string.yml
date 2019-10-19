@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Adding availability zone
+
+Parameters:
+  MyKeyName:
+    Description: select the keypair
+    Type: "AWS::EC2::KeyPair::KeyName"
+  MyAvailabilityZone:
+    Description: select the AZ
+    Type: String
+    Default: ap-south-1a
+    AllowedValues:
+      - ap-south-1a
+      - ap-south-1b
+
+Resources:
+  ProdEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties: 
+      ImageId: 'ami-02913db388613c3e1'
+      InstanceType: t2.micro
+      KeyName: !Ref MyKeyName
+      SecurityGroups: 
+        - default
+        - !Ref SSHSecurityGroup
+      AvailabilityZone: !Ref MyAvailabilityZone  
+  SSHSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: ssh new group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 0.0.0.0/0  
+                 

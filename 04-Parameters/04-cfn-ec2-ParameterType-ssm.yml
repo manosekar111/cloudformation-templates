@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ec2 parameter type in ssm
+
+Parameters:
+  MyKeyName: 
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: 'Select the key pair'
+  AvailabiltyZone:
+    Description: 'select AZ'
+    Type: 'String'
+    Default: ap-south-1a
+    AllowedValues:
+      - ap-south-1a
+      - ap-south-1b
+  MyInstanceType:
+    Description: 'select the instance type'
+    Type: AWS::SSM::Parameter::Value<String>
+
+Resources:
+  ProdEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: 'ami-02913db388613c3e1'
+      InstanceType: !Ref MyInstanceType
+      KeyName: !Ref  MyKeyName
+      SecurityGroups:
+        - default
+        - !Ref SSHSecurityGroup
+  SSHSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties: 
+      GroupDescription: New ssh group
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0      

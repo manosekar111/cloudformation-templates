@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  MyKeyName:
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: 'Select the key'
+  MyEnvironmentName:
+    Type: 'String'
+    Description: 'select the environment'
+    Default: Prod
+    AllowedValues:
+      - Prod
+      - Dev  
+      - QA
+    ConstraintDescription: must be development or production or qa      
+Mappings:
+  MyRegionMap:
+    ap-south-1:
+      HVM64: ami-02913db388613c3e1
+    us-east-2:
+      HVM64: ami-0c64dd618a49aeee8
+  MyEnvironmentMap:
+    Prod:
+      instanceType: t2.small
+    Dev:
+      instanceType: t2.micro 
+    QA:
+      instanceType: t2.medium    
+Conditions:
+  CreateEIPForProd: !Equals [!Ref MyEnvironmentName, Prod ]  
+  CreateProdSecurityGroup: !Equals [!Ref MyEnvironmentName, Prod]
+  CreateDevSecurityGroup: !Not [{Condition: CreateProdSecurityGroup}]
+Resources:
+  MyVMInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !FindInMap
+        - MyRegionMap
+        - !Ref 'AWS::Region'
+        - HVM64
+      InstanceType: !FindInMap
+        - MyEnvironmentMap
+        - !Ref MyEnvironmentName
+        - instanceType
+      KeyName: !Ref MyKeyName
+      SecurityGroups: !If [CreateDevSecurityGroup, [!Ref DevEnvSecurityGroup], [!Ref ProdEnvSecurityGroup]]
+  MyProdEIP:
+    Type: 'AWS::EC2::EIP'
+    Condition: CreateEIPForProd
+    Properties:
+      InstanceId: !Ref MyVMInstance
+
+  DevEnvSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Condition: CreateDevSecurityGroup
+    Properties:
+      GroupDescription: Dev SG
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+  ProdEnvSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Condition: CreateProdSecurityGroup
+    Properties:
+      GroupDescription: 'Prod SG'
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+

@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  MyVmInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties: 
+      ImageId:
+      InstanceType: t2.micro
+      KeyName: !Ref MyKeyName

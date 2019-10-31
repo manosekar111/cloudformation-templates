@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: outputs practices
+
+Parameters:
+  MyKeyName:
+    Description: 'Select the keyName' 
+    Type: 'AWS::EC2::KeyPair::KeyName'
+  MyEnvironmentName:
+    Description: 'Select the Environment'
+    Type: 'String'
+    Default: Dev
+    AllowedValues:
+      - Prod
+      - Dev
+    ConstraintDescription: must be development or production
+Mappings:
+  MyRegionMap:
+    ap-south-1:
+      HVM64: ami-02913db388613c3e1
+    us-east-2:
+      HVM64: ami-0c64dd618a49aeee8
+  MyEnvironmentMap:
+    Prod:
+      instanceType: t2.micro
+    Dev:
+      instanceType: t2.small
+Conditions:
+  CreateDevSecurityGroup: !Equals [!Ref MyEnvironmentName, Dev]        
+Resources:
+  MyVMInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !FindInMap
+        - MyRegionMap
+        - !Ref 'AWS::Region'
+        - HVM64
+      KeyName: !Ref MyKeyName
+      InstanceType: !FindInMap
+        - MyEnvironmentMap
+        - !Ref MyEnvironmentName
+        - instanceType
+      SecurityGroups: !If [CreateDevSecurityGroup, [!Ref MyDevGlobalSecurityGroup], !Ref 'AWS::NoValue']
+  MyDevGlobalSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Condition: CreateDevSecurityGroup 
+    Properties: 
+      GroupDescription: MydevSecGrp          
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+Outputs:
+  MyInstanceId:
+    Description: Myinstance ID
+    Value: !Ref MyVMInstance 
+  MyDNSName:
+    Description: My Public DNS Name  
+    Value: !GetAtt MyVMInstance.PublicDnsName
+  MyInstanceAvailabilityzone:
+    Description: Instance Availabilityzone
+    Value: !GetAtt MyVMInstance.AvailabilityZone 
+    Export:
+      Name: !Sub "${AWS::StackName}-InstanceAZ"
+  MyDevGlobalSecurityGroup:
+    Description: My Devsshgroup
+    Condition: CreateDevSecurityGroup 
+    Value: !Ref MyDevGlobalSecurityGroup
+    Export:
+      Name: !Join [":", [!Ref 'AWS::StackName', DevGlobalssh]]

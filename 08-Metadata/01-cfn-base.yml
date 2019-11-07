@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  EnvironmentName:
+    Description: select the environment
+    Type: 'String'
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - Prod
+    ConstraintDescription: must be development  or production
+  MyInstanceType:
+    Description: Select ec2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+  MyKeyName:
+    Description: select the keyname
+    Type: AWS::EC2::KeyPair::KeyName
+  MyAvailabilityZone:
+    Description: select the availabilityzone
+    Type: String
+    Default: ap-south-1a
+    AllowedValues:
+      - ap-south-1a
+      - us-east-2a
+      - us-east-2b
+      - us-east-2c
+Conditions:
+  CreateEIPForProd: !Equals [!Ref EnvironmentName, Prod]
+
+Resources:
+  MyVMInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0a74bfeb190bd404f
+      InstanceType: !Ref MyInstanceType
+      KeyName: !Ref MyKeyName
+      AvailabilityZone: !Ref MyAvailabilityZone 
+  MyProdEIP:
+    Type: AWS::EC2::EIP
+    Condition: CreateEIPForProd
+    Properties:
+      InstanceId: !Ref  MyVMInstance                          

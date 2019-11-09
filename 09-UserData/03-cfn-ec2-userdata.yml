@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  OrginzationName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    Default: manobrain
+  EnvironmentName:
+    Description: select the environment
+    Type: String
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - Prod
+    ConstraintDescription: must be development  or production
+  VpcCIDR:
+    Description: Enter the CIDR Block Range
+    Type: String
+    Default: 10.0.0.0/16
+  PublicSubnet1CIDR:
+    Description: Select the IP range for publicsubnet
+    Type: String
+    Default: 10.0.1.0/24       
+  MyInstanceType:
+    Description: Select ec2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+  MyKeyName:
+    Description: select the keyname
+    Type: 'AWS::EC2::KeyPair::KeyName'
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref OrginzationName
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref OrginzationName
+  InternetGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC        
+  PublicSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select 
+        - 0
+        - !GetAZs ''
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${OrginzationName} Public Subnet (AZ1)'
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${OrginzationName} Public Routes'         
+  DefaultPublicRoute:
+    Type: 'AWS::EC2::Route'
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  
+  PublicSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1                          
+  SSHSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: ssh new group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 0.0.0.0/0 
+      VpcId: !Ref VPC                    
+  MyVMInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0a74bfeb190bd404f
+      InstanceType: !Ref MyInstanceType
+      KeyName: !Ref MyKeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          SubnetId: !Ref PublicSubnet1
+          GroupSet: 
+            - Ref: SSHSecurityGroup  
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          sudo yum -y update
+          sudo yum -y install ruby wget
+          sudo yum -y erase java-1.7.0-openjdk.x86_64
+          sudo yum -y install java-1.8.0-openjdk.x86_64 java-1.8.0-openjdk-devel
+          sudo yum -y install tomcat8
+          sudo service tomcat8 start
+          sudo mkdir -p /usr/share/tomcat8/webapps/ROOT
+          sudo touch /usr/share/tomcat8/webapps/ROOT/index.html
+          sudo echo "Welcome to Etechbrain Production" > /usr/share/tomcat8/webapps/ROOT/index.html        
+          sudo cd /home/ec2-user
+          sudo wget https://aws-codedeploy-ap-south-1.s3.amazonaws.com/latest/install
+          sudo chmod +x ./install
+          sudo ./install auto
+          sudo service codedeploy-agent start      
+Outputs:
+  APPURL:
+    Description: Tomcat App Access URL
+    Value: !Sub 'http://${MyVMInstance.PublicDnsName}:8080/index.html'                                
